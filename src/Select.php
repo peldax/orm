@@ -50,7 +50,7 @@ use Spiral\Pagination\PaginableInterface;
  * @method mixed max($identifier) Perform aggregation (MAX) based on column or expression value.
  * @method mixed sum($identifier) Perform aggregation (SUM) based on column or expression value.
  *
- * @template TEntity of object
+ * @template-covariant TEntity of object
  */
 class Select implements IteratorAggregate, Countable, PaginableInterface
 {
