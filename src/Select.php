@@ -396,16 +396,18 @@ class Select implements IteratorAggregate, Countable, PaginableInterface
             return null;
         }
 
-        /** @var TEntity */
-        return $this->entityFactory->make($this->loader->getTarget(), $data[0], Node::MANAGED, typecast: true);
+        /** @var TEntity $result */
+        $result = $this->entityFactory->make($this->loader->getTarget(), $data[0], Node::MANAGED, typecast: true);
+
+        return $result;
     }
 
     /**
      * Fetch all records in a form of array.
      *
-     * @return array<int, TEntity>
+     * @return list<TEntity>
      */
-    public function fetchAll(): array
+    public function fetchAll(): iterable
     {
         return \iterator_to_array($this->getIterator(), false);
     }
@@ -434,7 +436,7 @@ class Select implements IteratorAggregate, Countable, PaginableInterface
      *
      * @return array<array-key, array<string, mixed>>
      */
-    public function fetchData(bool $typecast = true): array
+    public function fetchData(bool $typecast = true): iterable
     {
         $node = $this->loader->createNode();
         $this->loader->loadData($node, false);
@@ -442,9 +444,10 @@ class Select implements IteratorAggregate, Countable, PaginableInterface
         if (!$typecast) {
             return $node->getResult();
         }
+
         $mapper = $this->mapperProvider->getMapper($this->loader->getTarget());
 
-        return array_map([$mapper, 'cast'], $node->getResult());
+        return \array_map([$mapper, 'cast'], $node->getResult());
     }
 
     /**
