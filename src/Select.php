@@ -130,7 +130,7 @@ class Select implements IteratorAggregate, Countable, PaginableInterface
     /**
      * Create new Selector with applied scope. By default no scope used.
      *
-     * @return Select<TEntity>
+     * @return static<TEntity>
      */
     public function scope(ScopeInterface $scope = null): self
     {
@@ -160,7 +160,7 @@ class Select implements IteratorAggregate, Countable, PaginableInterface
      *
      * @psalm-param string|int|list<string|int>|object ...$ids
      *
-     * @return Select<TEntity>
+     * @return static<TEntity>
      */
     public function wherePK(string|int|array|object ...$ids): self
     {
@@ -195,7 +195,7 @@ class Select implements IteratorAggregate, Countable, PaginableInterface
     }
 
     /**
-     * @return Select<TEntity>
+     * @return static<TEntity>
      */
     public function limit(int $limit): self
     {
@@ -205,7 +205,7 @@ class Select implements IteratorAggregate, Countable, PaginableInterface
     }
 
     /**
-     * @return Select<TEntity>
+     * @return static<TEntity>
      */
     public function offset(int $offset): self
     {
@@ -267,7 +267,7 @@ class Select implements IteratorAggregate, Countable, PaginableInterface
      *
      * @see with()
      *
-     * @return Select<TEntity>
+     * @return static<TEntity>
      */
     public function load(string|array $relation, array $options = []): self
     {
@@ -357,7 +357,7 @@ class Select implements IteratorAggregate, Countable, PaginableInterface
      *
      * @see load()
      *
-     * @return Select<TEntity>
+     * @return static<TEntity>
      */
     public function with(string|array $relation, array $options = []): self
     {
@@ -465,7 +465,7 @@ class Select implements IteratorAggregate, Countable, PaginableInterface
      * @param list<non-empty-string> $pk
      * @param list<array|int|object|string> $args
      *
-     * @return Select<TEntity>
+     * @return static<TEntity>
      */
     private function buildCompositePKQuery(array $pk, array $args): self
     {
@@ -481,7 +481,7 @@ class Select implements IteratorAggregate, Countable, PaginableInterface
                 );
             }
 
-            $isAssoc = !array_is_list($values);
+            $isAssoc = !\array_is_list($values);
             foreach ($values as $key => $value) {
                 if ($isAssoc && !\in_array($key, $pk, true)) {
                     throw new InvalidArgumentException(\sprintf('Primary key `%s` not found.', $key));
