@@ -397,9 +397,7 @@ class Select implements IteratorAggregate, Countable, PaginableInterface
         }
 
         /** @var TEntity $result */
-        $result = $this->entityFactory->make($this->loader->getTarget(), $data[0], Node::MANAGED, typecast: true);
-
-        return $result;
+        return $this->entityFactory->make($this->loader->getTarget(), $data[0], Node::MANAGED, typecast: true);
     }
 
     /**
