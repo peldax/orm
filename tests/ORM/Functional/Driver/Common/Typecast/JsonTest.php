@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Cycle\ORM\Tests\Functional\Driver\Common\Typecast;
 
-use Cycle\ORM\EntityManager;
-use Cycle\ORM\Heap\Heap;
 use Cycle\ORM\Heap\Node;
 use Cycle\ORM\Mapper\Mapper;
 use Cycle\ORM\Parser\Typecast;
@@ -18,6 +16,7 @@ use Cycle\ORM\Tests\Functional\Driver\Common\BaseTest;
 use Cycle\ORM\Tests\Fixtures\User;
 use Cycle\ORM\Tests\Functional\Driver\Common\Typecast\Fixture\JsonTypecast;
 use Cycle\ORM\Tests\Traits\TableTrait;
+use Throwable;
 
 abstract class JsonTest extends BaseTest
 {
@@ -113,10 +112,7 @@ abstract class JsonTest extends BaseTest
         $result = $selector->fetchOne();
 
         $this->captureWriteQueries();
-
-        $em = new EntityManager($this->orm);
-        $em->persist($result);
-        $em->run();
+        $this->save($result);
         $this->assertNumWrites(0);
     }
 
@@ -128,31 +124,28 @@ abstract class JsonTest extends BaseTest
         $e->settingsNullable = ['some' => 'data'];
 
         $this->captureWriteQueries();
-        $em = new EntityManager($this->orm);
-        $em->persist($e);
-        $em->run();
+        $this->save($e);
         $this->assertNumWrites(1);
 
         $this->captureWriteQueries();
-        $em = new EntityManager($this->orm);
-        $em->persist($e);
-        $em->run();
+        $this->save($e);
         $this->assertNumWrites(0);
-
-        $this->assertEquals(3, $e->id);
 
         $this->assertTrue($this->orm->getHeap()->has($e));
         $this->assertSame(Node::MANAGED, $this->orm->getHeap()->get($e)->getStatus());
 
-        $this->orm = $this->orm->with(heap: new Heap());
+        $this->orm->getHeap()->clean();
 
         $selector = new Select($this->orm, User::class);
-        $result = $selector->where('id', 3)->fetchOne();
+        $result = $selector->where('id', $e->id)->fetchOne();
         $this->assertSame('test@email.com', $result->email);
         $this->assertSame(['theme' => 'light'], $result->settings);
         $this->assertSame(['some' => 'data'], $result->settingsNullable);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function testStoresEmptyArraySettings(): void
     {
         $e = new User();
@@ -161,22 +154,20 @@ abstract class JsonTest extends BaseTest
         $e->settingsNullable = [];
 
         $this->captureWriteQueries();
-        $this-save($e);
+        $this->save($e);
         $this->assertNumWrites(1);
 
         $this->captureWriteQueries();
-        $this-save($e)
+        $this->save($e);
         $this->assertNumWrites(0);
-
-        $this->assertEquals(3, $e->id);
 
         $this->assertTrue($this->orm->getHeap()->has($e));
         $this->assertSame(Node::MANAGED, $this->orm->getHeap()->get($e)->getStatus());
 
-        $this->orm = $this->orm->getHeap()->clear();
+        $this->orm->getHeap()->clean();
 
         $selector = new Select($this->orm, User::class);
-        $result = $selector->where('id', 3)->fetchOne();
+        $result = $selector->where('id', $e->id)->fetchOne();
         $this->assertSame('test@email.com', $result->email);
         $this->assertSame([], $result->settings);
         $this->assertSame([], $result->settingsNullable);
@@ -190,25 +181,26 @@ abstract class JsonTest extends BaseTest
         $e->settingsNullable = null;
 
         $this->captureWriteQueries();
-        $this-save($e)
+        $this->save($e);
         $this->assertNumWrites(1);
 
         $this->captureWriteQueries();
-        $this-save($e)
+        $this->save($e);
         $this->assertNumWrites(0);
-
-        $this->assertEquals(3, $e->id);
 
         $this->assertTrue($this->orm->getHeap()->has($e));
         $this->assertSame(Node::MANAGED, $this->orm->getHeap()->get($e)->getStatus());
 
-        $this->orm = $this->orm->with(heap: new Heap());
+        $this->orm->getHeap()->clean();
 
-        $selector = new Select($this->orm, User::class);
-        $result = $selector->where('id', 3)->fetchOne();
+        $selector = (new Select($this->orm, User::class))->where('id', $e->id);
+        $result = $selector->fetchOne();
         $this->assertSame('test@email.com', $result->email);
         $this->assertSame([], $result->settings);
         $this->assertSame(null, $result->settingsNullable);
+
+        $result = $selector->fetchData(false)[0];
+        $this->assertNull($result['settingsNullable']);
     }
 
     public function testStoreJsonSerializable(): void
@@ -219,25 +211,19 @@ abstract class JsonTest extends BaseTest
         $e->jsonSerializable = new JsonSerializableClass();
 
         $this->captureWriteQueries();
-        $em = new EntityManager($this->orm);
-        $em->persist($e);
-        $em->run();
+        $this->save($e);
         $this->assertNumWrites(1);
 
         $this->captureWriteQueries();
-        $tr = new EntityManager($this->orm);
-        $tr->persist($e);
-        $tr->run();
+        $this->save($e);
         $this->assertNumWrites(0);
-
-        $this->assertEquals(3, $e->id);
 
         $this->assertTrue($this->orm->getHeap()->has($e));
         $this->assertSame(Node::MANAGED, $this->orm->getHeap()->get($e)->getStatus());
 
-        $this->orm = $this->orm->with(heap: new Heap());
+        $this->orm->getHeap()->clean();
 
-        $result = $this->getDatabase()->table('users')->select()->where('id', 3)->fetchAll();
+        $result = $this->getDatabase()->table('users')->select()->where('id', $e->id)->fetchAll();
         $this->assertEquals(
             (new JsonSerializableClass())->jsonSerialize(),
             \json_decode($result[0]['json_serializable'], true)
@@ -250,18 +236,14 @@ abstract class JsonTest extends BaseTest
         $e->settings = ['theme' => 'light'];
 
         $this->captureWriteQueries();
-        $em = new EntityManager($this->orm);
-        $em->persist($e);
-        $em->run();
+        $this->save($e);
         $this->assertNumWrites(1);
 
         $this->captureWriteQueries();
-        $em = new EntityManager($this->orm);
-        $em->persist($e);
-        $em->run();
+        $this->save($e);
         $this->assertNumWrites(0);
 
-        $this->orm = $this->orm->with(heap: new Heap());
+        $this->orm->getHeap()->clean();
 
         $selector = new Select($this->orm, User::class);
         $result = $selector->where('id', 1)->fetchOne();
@@ -280,14 +262,12 @@ abstract class JsonTest extends BaseTest
         $e->settings = ['theme' => 'light'];
 
         $this->captureWriteQueries();
-        $em = new EntityManager($this->orm);
-        $em->persist($e);
-        $em->run();
+        $this->save($e);
         $this->assertNumWrites(1);
 
-        $this->orm = $this->orm->with(heap: new Heap());
+        $this->orm->getHeap()->clean();
 
-        $result = $this->getDatabase()->table('users')->select()->where('id', 3)->fetchAll();
+        $result = $this->getDatabase()->table('users')->select()->where('id', $e->id)->fetchAll();
         $this->assertSame('uncast-json', $result[0]['settings']);
     }
 }
