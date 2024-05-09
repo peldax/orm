@@ -198,7 +198,7 @@ final class SchemaTest extends BaseTest
     }
 
     /**
-     * @covers CompositeTypecast::cast()
+     * @see CompositeTypecast::cast()
      */
     public function testUseCompositeTypecast(): void
     {
