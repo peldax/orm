@@ -17,7 +17,7 @@ trait ChainTrait
         string|LoaderInterface $relation,
         array $options,
         bool $join = false,
-        bool $load = false
+        bool $load = false,
     ): LoaderInterface;
 
     /**
