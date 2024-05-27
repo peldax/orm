@@ -41,7 +41,7 @@ abstract class AbstractTestCase extends BaseTest
             ->where(function (QueryBuilder $qb): void {
                 $searchProperties = ['code', 'name', 'trans.title'];
                 foreach ($searchProperties as $propertyName) {
-                    $qb->orWhere($propertyName, 'LIKE', "%eng%");
+                    $qb->orWhere($propertyName, 'LIKE', '%eng%');
                 }
             })
             // User want to sort by translation

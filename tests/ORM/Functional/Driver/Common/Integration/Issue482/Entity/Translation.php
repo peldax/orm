@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Cycle\ORM\Tests\Functional\Driver\Common\Integration\Issue482\Entity;
 
-
 class Translation
 {
     public ?int $id = null;
