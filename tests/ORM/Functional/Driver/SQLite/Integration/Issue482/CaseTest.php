@@ -15,8 +15,4 @@ use Cycle\ORM\Tests\Functional\Driver\Common\Integration\Issue482\AbstractTestCa
 class CaseTest extends AbstractTestCase
 {
     public const DRIVER = 'sqlite';
-
-    protected function assertExpectedSql(Select $select): void
-    {
-    }
 }
