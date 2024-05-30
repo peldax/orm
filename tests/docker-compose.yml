@@ -19,6 +19,8 @@ services:
       MYSQL_DATABASE: "spiral"
       MYSQL_ROOT_PASSWORD: "root"
       MYSQL_ROOT_HOST: "%"
+      MYSQL_CHARSET: "utf8mb4"
+      MYSQL_COLLATION: "utf8mb4_unicode_ci"
 
   cycle-postgres:
     image: postgres:15.2
