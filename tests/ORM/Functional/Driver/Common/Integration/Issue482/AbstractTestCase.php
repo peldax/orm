@@ -34,7 +34,7 @@ abstract class AbstractTestCase extends BaseTest
             // User wants to search everywhere
             ->with('translations', [
                 'as' => 'trans',
-                'method' => 4, //JoinableLoader::LEFT_JOIN
+                'method' => Select\JoinableLoader::LEFT_JOIN,
                 'alias' => 'trans1',
             ])
             // User wants to search everywhere
@@ -47,7 +47,7 @@ abstract class AbstractTestCase extends BaseTest
             // User want to sort by translation
             ->with('translations', [
                 'as' => 'transEn',
-                'method' => 4, //JoinableLoader::LEFT_JOIN
+                'method' => Select\JoinableLoader::LEFT_JOIN,
                 'where' => [
                     'locale_id' => 1,
                 ],
@@ -64,9 +64,9 @@ abstract class AbstractTestCase extends BaseTest
         $this->assertCount(3, $data);
         $this->assertEquals(
             [
-                'America on english',
-                'China on english',
-                'Russia on english',
+                'America in english',
+                'China in english',
+                'Russia in english',
             ],
             \array_column(
                 \array_merge(
@@ -80,9 +80,9 @@ abstract class AbstractTestCase extends BaseTest
         $this->assertCount(3, $all);
         $this->assertEquals(
             [
-                'America on english',
-                'China on english',
-                'Russia on english',
+                'America in english',
+                'China in english',
+                'Russia in english',
             ],
             \array_map(
                 static function (Country $c) {
@@ -94,22 +94,13 @@ abstract class AbstractTestCase extends BaseTest
         );
     }
 
-    protected function assertExpectedSql(Select $select): void
+    private function assertExpectedSql(Select $select): void
     {
-        $actual = $select->buildQuery()->sqlStatement();
-        $expected = <<<SQL
-            SELECT `country`.`id` AS `c0`, `country`.`name` AS `c1`, `country`.`code` AS `c2`, `country`.`is_friendly` AS `c3`
-            FROM `country` AS `country`
-            LEFT JOIN `translation` AS `trans`
-                ON `trans`.`country_id` = `country`.`id`
-            LEFT JOIN `translation` AS `transEn`
-                ON `transEn`.`country_id` = `country`.`id` AND `transEn`.`locale_id` = 1
-            WHERE `country`.`is_friendly` = TRUE AND (`country`.`code` LIKE '%eng%' OR `country`.`name` LIKE '%eng%' OR `trans`.`title` LIKE '%eng%'  )
-            ORDER BY `transEn`.`title` ASC
-            SQL;
-        $this->assertEquals(
-            \array_map('trim', \explode($actual, PHP_EOL)),
-            \array_map('trim', \explode($expected, PHP_EOL))
+        $actual = (string)$select->buildQuery();
+        $expected = $this->getExpectedSql();
+        $this->assertSame(
+            \array_map('trim', \explode("\n", $expected)),
+            \array_map('trim', \explode("\n", $actual)),
         );
     }
 
@@ -145,10 +136,14 @@ abstract class AbstractTestCase extends BaseTest
         $this->getDatabase()->table('locale')->delete()->run();
 
         $en = 1;
+        $ru = 2;
+        $cn = 3;
         $this->getDatabase()->table('locale')->insertMultiple(
             ['code'],
             [
                 ['en'],
+                ['ru'],
+                ['cn'],
             ],
         );
         $this->getDatabase()->table('country')->insertMultiple(
@@ -163,10 +158,18 @@ abstract class AbstractTestCase extends BaseTest
         $this->getDatabase()->table('translation')->insertMultiple(
             ['country_id', 'locale_id', 'title'],
             [
-                [1, $en, 'Russia on english'],
-                [2, $en, 'America on english'],
-                [3, $en, 'China on english'],
+                [1, $en, 'Russia in english'],
+                [3, $en, 'China in english'],
+                [1, $cn, '俄罗斯 in chinese'],
+                [3, $ru, 'Китай in russian'],
+                [2, $cn, '美国 in chinese'],
+                [2, $en, 'America in english'],
+                [1, $ru, 'Россия in russian'],
+                [2, $ru, 'Америка in russian'],
+                [3, $cn, '中国 in chinese'],
             ],
         );
     }
+
+    abstract protected function getExpectedSql(): string;
 }
