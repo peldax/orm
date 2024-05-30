@@ -397,6 +397,7 @@ class Select implements IteratorAggregate, Countable, PaginableInterface
      * ```
      *
      * @return static<TEntity>
+     *
      * @see load()
      */
     public function with(string|array $relation, array $options = []): self
