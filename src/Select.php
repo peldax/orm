@@ -375,25 +375,20 @@ class Select implements IteratorAggregate, Countable, PaginableInterface
      *             ->load('comments', ['using' => 'commentsR']);
      * ```
      *
-     * To use `with` twice on the same relation you can use `alias` option.
+     * To use with() twice on the same relation, you can use `alias` option.
      * ```php
      * Country::find()
      *     // Find all translations
      *     ->with('translations', [ 'as' => 'trans'])
-     *     ->where(function (QueryBuilder $qb): void {
-     *         $searchProperties = ['code', 'name', 'trans.title'];
-     *         foreach ($searchProperties as $propertyName) {
-     *             $qb->orWhere($propertyName, 'LIKE', '%eng%');
-     *         }
-     *     })
      *     ->load('translations', ['using' => 'trans'])
-     *     // Second `with`
+     *     // Second `with` for sorting only
      *     ->with('translations', [
-     *         'as' => 'comments2', // Alias for SQL
-     *         'alias' => 'comments_sort', // Alias for ORM to not overwrite previous `with` call
+     *         'as' => 'transEn', // Alias for SQL
+     *         'alias' => 'translations-en', // Alias for ORM to not to overwrite previous `with`
      *         'method' => JoinableLoader::LEFT_JOIN,
-     *         'where' => ['author_id' => $id],
-     *     ]);
+     *         'where' => ['locale' => 'en'],
+     *     ])
+     *     ->orderBy('transEn.title', 'ASC');
      * ```
      *
      * @return static<TEntity>
