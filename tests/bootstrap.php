@@ -22,6 +22,7 @@ $drivers = [
             database: 'spiral',
             host: '127.0.0.1',
             port: 13306,
+            charset: 'utf8mb4',
             user: 'root',
             password: 'root',
         ),

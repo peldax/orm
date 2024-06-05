@@ -175,24 +175,29 @@ abstract class AbstractLoader implements LoaderInterface
         string|LoaderInterface $relation,
         array $options,
         bool $join = false,
-        bool $load = false
+        bool $load = false,
     ): LoaderInterface {
         if ($relation instanceof ParentLoader) {
             return $this->inherit = $relation->withContext($this);
         }
+
         if ($relation instanceof SubclassLoader) {
             $loader = $relation->withContext($this);
             $this->subclasses[] = $loader;
             return $loader;
         }
+
         $relation = $this->resolvePath($relation);
+        $alias ??= $options['alias'] ?? $relation;
+        unset($options['alias']);
         if (!empty($options['as'])) {
-            $this->registerPath($options['as'], $relation);
+            // ??
+            $this->registerPath($options['as'], $alias);
         }
 
-        //Check if relation contain dot, i.e. relation chain
+        // Check if relation contain dot, i.e. relation chain
         if ($this->isChain($relation)) {
-            return $this->loadChain($relation, $options, $join, $load);
+            return $this->loadChain($relation, $options, $join, $load, $alias);
         }
 
         /*
@@ -210,8 +215,8 @@ abstract class AbstractLoader implements LoaderInterface
         }
 
         if (isset($loaders[$relation])) {
-            // overwrite existing loader options
-            return $loaders[$relation] = $loaders[$relation]->withContext($this, $options);
+            // Overwrite existing loader options
+            return $loaders[$alias] = $loaders[$alias]->withContext($this, $options);
         }
 
         if ($join) {
@@ -222,7 +227,7 @@ abstract class AbstractLoader implements LoaderInterface
         }
 
         try {
-            //Creating new loader.
+            // Creating new loader.
             $loader = $this->factory->loader(
                 $this->ormSchema,
                 $this->sourceProvider,
@@ -231,7 +236,7 @@ abstract class AbstractLoader implements LoaderInterface
             );
         } catch (SchemaException | FactoryException $e) {
             if ($this->inherit instanceof self) {
-                return $this->inherit->loadRelation($relation, $options, $join, $load);
+                return $this->inherit->loadRelation($relation, $options, $join, $load, $alias);
             }
             throw new LoaderException(
                 sprintf('Unable to create loader: %s', $e->getMessage()),
@@ -240,7 +245,7 @@ abstract class AbstractLoader implements LoaderInterface
             );
         }
 
-        return $loaders[$relation] = $loader->withContext($this, $options);
+        return $loaders[$alias] = $loader->withContext($this, $options);
     }
 
     public function createNode(): AbstractNode
